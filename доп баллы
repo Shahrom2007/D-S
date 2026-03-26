@@ -1,0 +1,58 @@
+def SET_convert_bin_to_list(M_bin):
+    """Преобразует двоичный вектор в список элементов"""
+    assert(len(M_bin) == 10)
+    return [i for i, val in enumerate(M_bin) if val]
+
+def SET_convert_list_to_bin(M_list):
+    """Преобразует список элементов в двоичный вектор"""
+    M_bin = [0] * 10
+    for elem in M_list:
+        if 0 <= elem < 10:
+            M_bin[elem] = 1
+    return M_bin
+
+def SET_bin_union(A, B):
+    """Объединение: элемент есть в A ИЛИ в B"""
+    return [int(A[i] or B[i]) for i in range(10)]
+
+def SET_bin_intersection(A, B):
+    """Пересечение: элемент есть в A И в B"""
+    return [int(A[i] and B[i]) for i in range(10)]
+
+def SET_bin_difference(A, B):
+    """Разность: элемент есть в A, но его НЕТ в B"""
+    return [int(A[i] and not B[i]) for i in range(10)]
+
+def SET_bin_symm_difference(A, B):
+    """Симметрическая разность: элемент есть только в одном из множеств (XOR)"""
+    return [int(A[i] != B[i]) for i in range(10)]
+
+def SET_bin_complement(A):
+    """Дополнение: инверсия множества относительно Универсума"""
+    return [int(not A[i]) for i in range(10)]
+
+
+def test_set_operations(A_list, B_list):
+    A_bin = SET_convert_list_to_bin(A_list)
+    B_bin = SET_convert_list_to_bin(B_list)
+    
+    print(f"Множество A: {SET_convert_bin_to_list(A_bin)}")
+    print(f"Множество B: {SET_convert_bin_to_list(B_bin)}")
+    print("-" * 30)
+    
+
+    union = SET_bin_union(A_bin, B_bin)
+    inter = SET_bin_intersection(A_bin, B_bin)
+    diff = SET_bin_difference(A_bin, B_bin)
+    symm = SET_bin_symm_difference(A_bin, B_bin)
+    compl = SET_bin_complement(A_bin)
+
+    print("Объединение (A ∪ B):           ", SET_convert_bin_to_list(union))
+    print("Пересечение (A ∩ B):           ", SET_convert_bin_to_list(inter))
+    print("Разность (A \ B):              ", SET_convert_bin_to_list(diff))
+    print("Симметрическая разность (A Δ B):", SET_convert_bin_to_list(symm))
+    print("Lополнение (не А) :            ", SET_convert_bin_to_list(compl))
+A = [4,5,3,1,9]
+B = [1,2,3,4,5]
+
+test_set_operations(A,B)
