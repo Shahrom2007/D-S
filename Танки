@@ -1,0 +1,48 @@
+import numpy as np
+
+# 1. Создаем поле
+board = np.zeros((10, 10), dtype=int)
+
+# 2. Маски корпусов танков (ваши текущие координаты)
+tank1_mask = np.zeros((10, 10), dtype=bool)
+tank1_mask[0:2, 2:4] = True  # Танк 1 (верхний левый угол)
+
+tank2_mask = np.zeros((10, 10), dtype=bool)
+tank2_mask[3:5, 3:5] = True  # Танк 2 (чуть ниже и правее)
+
+# 3. Логика выстрела Танка 1
+# Допустим, дуло Танка 1 находится в точке (1, 3) и стреляет ВНИЗ (по оси Row)
+gun_pos1 = (1, 3)
+direction1 = (1, 0) # Смещение: +1 по строке, 0 по столбцу (вниз)
+
+def check_shot(start_pos, direction, enemy_mask):
+    r, c = start_pos
+    dr, dc = direction
+    
+    # Летим лучом, пока не выйдем за границы поля 10x10
+    while 0 <= r < 10 and 0 <= c < 10:
+        # Проверяем, попал ли луч в маску врага
+        if enemy_mask[r, c]:
+            return True, (r, c)
+        r += dr
+        c += dc
+    return False, None
+
+# Проверка выстрела первого во второго
+is_hit, hit_coord = check_shot(gun_pos1, direction1, tank2_mask)
+
+# 4. Вывод результатов
+if is_hit:
+    print(f"ПОПАДАНИЕ! Танк 1 попал в Танка 2 в точке {hit_coord}")
+    board[hit_coord] = 8 # Отметим место попадания на доске восьмеркой
+else:
+    print("Промах! Выстрел улетел в молоко.")
+
+# Отрисовка танков на доске (если нет наложения корпусов)
+overlap = np.any(tank1_mask & tank2_mask)
+if not overlap:
+    board[tank1_mask] += 1
+    board[tank2_mask] += 2
+
+print("\nТекущее состояние поля:")
+print(board)
