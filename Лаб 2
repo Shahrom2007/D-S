@@ -1,0 +1,127 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+
+// Структура точки
+typedef struct point {
+    double x;
+    double y;
+    char *name;
+} POINT;
+
+// Структура многоугольника
+typedef struct poly {
+    int n;
+    POINT *p;
+    char *name;
+} POLY;
+
+// Структура отрезка (сегмента)
+typedef struct segm {
+    POINT p1;
+    POINT p2;
+    char *name;
+} SEGM;
+
+// Расстояние между двумя точками
+double dist(POINT *p1, POINT *p2) {
+    register double t;
+    return sqrt((t = (p2->x - p1->x)) * t + (t = (p2->y - p1->y)) * t);
+}
+
+// Периметр многоугольника
+double perimeter(POLY *p) {
+    double s = 0;
+    for (int i = 0; i < p->n; i++) {
+        s += dist(&p->p[(i + 1) % p->n], &p->p[i]);
+    }
+    return s;
+}
+
+// Площадь многоугольника (формула Гаусса)
+double area(POLY *p) {
+    double s = 0;
+    for (int i = 0; i < p->n; i++) {
+        s += (p->p[(i + 1) % p->n].x - p->p[i].x) * (p->p[(i + 1) % p->n].y + p->p[i].y);
+    }
+    return fabs(0.5 * s);
+}
+
+// Диаметр многоугольника (максимальное расстояние между вершинами)
+double diameter(POLY *p) {
+    double d = 0, t;
+    for (int i = 0; i < p->n; i++) {
+        for (int j = i + 1; j < p->n; j++) {
+            if ((t = dist(&p->p[i], &p->p[j])) > d) {
+                d = t;
+            }
+        }
+    }
+    return d;
+}
+
+// Определитель матрицы 3x3 (для проверки пересечения отрезков, как на фото)
+double det(double m[3][3]) {
+    return m[0][0]*m[1][1]*m[2][2] + m[0][1]*m[1][2]*m[2][0] + m[1][0]*m[2][1]*m[0][2] -
+           m[2][0]*m[1][1]*m[0][2] - m[0][1]*m[1][0]*m[2][2] - m[1][2]*m[2][1]*m[0][0];
+}
+
+// Заглушка для проверки пересечения (логика из фотографий)
+int IsIntersect(SEGM *s1, SEGM *s2) {
+    // На фото видна логика заполнения матриц координатами точек 
+    // и проверка знаков определителей (S1 * S2 > 0)
+    return 0; // Для примера возвращаем 0
+}
+
+int main(int argc, char *argv[]) {
+    if (argc < 2) {
+        printf("Usage: %s <input_file>\n", argv[0]);
+        return 1;
+    }
+
+    FILE *F;
+    POLY p;
+    char S[256];
+
+    F = fopen(argv[1], "r");
+    if (F == NULL) {
+        perror("Error opening file");
+        return 1;
+    }
+
+    // Чтение количества точек
+    if (fscanf(F, "%d", &p.n) != 1) return 1;
+    p.p = (POINT *)malloc(p.n * sizeof(POINT));
+
+    // Чтение имени многоугольника
+    if (fscanf(F, "%255s", S) != 1) return 1;
+    p.name = (char *)malloc(strlen(S) + 1);
+    strcpy(p.name, S);
+
+    // Чтение координат и имен точек
+    for (int i = 0; i < p.n; i++) {
+        if (fscanf(F, "%lf %lf %255s", &p.p[i].x, &p.p[i].y, S) != 3) break;
+        p.p[i].name = (char *)malloc(strlen(S) + 1);
+        strcpy(p.p[i].name, S);
+    }
+
+    // Вывод результатов
+    printf("Polygon: %s\n", p.name);
+    if (p.n >= 2) {
+        printf("Dist (P0-P1): %lf\n", dist(&p.p[0], &p.p[1]));
+    }
+    printf("Perimeter: %lf\n", perimeter(&p));
+    printf("Area: %lf\n", area(&p));
+    printf("Diameter: %lf\n", diameter(&p));
+
+    // Очистка памяти
+    for (int i = 0; i < p.n; i++) {
+        free(p.p[i].name);
+    }
+    free(p.p);
+    free(p.name);
+    fclose(F);
+
+    return 0;
+}
