@@ -66,7 +66,7 @@ double det(double m[3][3]) {
 }
 
 int main(int argc, char *argv[]) {
-    FILE *F = fopen("input.txt", "r"); // Укажите ваш файл
+    FILE *F = fopen("input.txt", "r"); 
     if (F == NULL) {
         printf("Ошибка открытия файла\n");
         return 1;
