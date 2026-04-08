@@ -1,48 +1,90 @@
 import numpy as np
 
-# 1. Создаем поле
-board = np.zeros((10, 10), dtype=int)
 
-# 2. Маски корпусов танков (ваши текущие координаты)
+x1_start = int(input("Tank 1, x start: "))
+y1_start = int(input("Tank 1, y start: "))
+x1_end = int(input("Tank 1, x end: "))
+y1_end = int(input("Tank 1, y end: "))
+
+
+x2_start = int(input("Tank 2, x start: "))
+y2_start = int(input("Tank 2, y start: "))
+x2_end = int(input("Tank 2, x end: "))
+y2_end = int(input("Tank 2, y end: "))
+
+
 tank1_mask = np.zeros((10, 10), dtype=bool)
-tank1_mask[0:2, 2:4] = True  # Танк 1 (верхний левый угол)
+tank1_mask[x1_start:x1_end, y1_start:y1_end] = True
 
 tank2_mask = np.zeros((10, 10), dtype=bool)
-tank2_mask[3:5, 3:5] = True  # Танк 2 (чуть ниже и правее)
+tank2_mask[x2_start:x2_end, y2_start:y2_end] = True
 
-# 3. Логика выстрела Танка 1
-# Допустим, дуло Танка 1 находится в точке (1, 3) и стреляет ВНИЗ (по оси Row)
-gun_pos1 = (1, 3)
-direction1 = (1, 0) # Смещение: +1 по строке, 0 по столбцу (вниз)
 
-def check_shot(start_pos, direction, enemy_mask):
-    r, c = start_pos
-    dr, dc = direction
-    
-    # Летим лучом, пока не выйдем за границы поля 10x10
-    while 0 <= r < 10 and 0 <= c < 10:
-        # Проверяем, попал ли луч в маску врага
-        if enemy_mask[r, c]:
-            return True, (r, c)
-        r += dr
-        c += dc
-    return False, None
+overlap_exists = np.any(tank1_mask & tank2_mask)
+print(f"Overlap: {overlap_exists}")
 
-# Проверка выстрела первого во второго
-is_hit, hit_coord = check_shot(gun_pos1, direction1, tank2_mask)
 
-# 4. Вывод результатов
-if is_hit:
-    print(f"ПОПАДАНИЕ! Танк 1 попал в Танка 2 в точке {hit_coord}")
-    board[hit_coord] = 8 # Отметим место попадания на доске восьмеркой
-else:
-    print("Промах! Выстрел улетел в молоко.")
+board = np.zeros((10, 10), dtype=int)
+board[x1_start:x1_end, y1_start:y1_end] += 1
+board[x2_start:x2_end, y2_start:y2_end] += 2
 
-# Отрисовка танков на доске (если нет наложения корпусов)
-overlap = np.any(tank1_mask & tank2_mask)
-if not overlap:
-    board[tank1_mask] += 1
-    board[tank2_mask] += 2
 
-print("\nТекущее состояние поля:")
+print("\nBoard (1=Tank 1, 2=Tank 2, 3=Overlap):")
 print(board)
+
+# ========== ДОБАВЛЕННАЯ ЧАСТЬ: СТРЕЛЬБА ТАНКОВ ==========
+
+def check_shots(tank_mask_self, tank_mask_enemy, self_start_x, self_start_y, self_end_x, self_end_y):
+    """Проверяет, может ли танк попасть в противника выстрелами во все стороны"""
+    
+    # Все 8 направлений стрельбы
+    directions = [(-1, 0), (1, 0), (0, -1), (0, 1),  # вверх, вниз, влево, вправо
+                  (-1, 1), (-1, -1), (1, 1), (1, -1)]  # диагонали
+    
+    # Перебираем все клетки танка (откуда может стрелять)
+    for i in range(self_start_x, self_end_x):
+        for j in range(self_start_y, self_end_y):
+            for dr, dc in directions:
+                r, c = i, j
+                # Движемся в направлении выстрела
+                while True:
+                    r += dr
+                    c += dc
+                    
+                    # Проверка выхода за границы поля
+                    if r < 0 or r >= 10 or c < 0 or c >= 10:
+                        break
+                    
+                    # Попадание в танк противника
+                    if tank_mask_enemy[r, c]:
+                        return True
+                    
+                    # Попадание в свой танк (не может стрелять сквозь себя)
+                    if self_start_x <= r < self_end_x and self_start_y <= c < self_end_y:
+                        break
+    
+    return False
+
+# Проверяем, попадает ли Tank 1 в Tank 2
+tank1_hits_tank2 = check_shots(tank1_mask, tank2_mask, x1_start, y1_start, x1_end, y1_end)
+
+# Проверяем, попадает ли Tank 2 в Tank 1
+tank2_hits_tank1 = check_shots(tank2_mask, tank1_mask, x2_start, y2_start, x2_end, y2_end)
+
+# Выводим результаты стрельбы
+print("\n" + "="*40)
+print("РЕЗУЛЬТАТЫ СТРЕЛЬБЫ")
+print("="*40)
+print(f"Tank 1 попадает в Tank 2: {tank1_hits_tank2}")
+print(f"Tank 2 попадает в Tank 1: {tank2_hits_tank1}")
+print("="*40)
+
+# Определяем результат боя
+if tank1_hits_tank2 and tank2_hits_tank1:
+    print(" РЕЗУЛЬТАТ: Оба танка попали друг в друга! ")
+elif tank1_hits_tank2:
+    print(" РЕЗУЛЬТАТ: Tank 1 попал в Tank 2! Победа Tank 1! ")
+elif tank2_hits_tank1:
+    print("РЕЗУЛЬТАТ: Tank 2 попал в Tank 1! Победа Tank 2! ")
+else:
+    print("РЕЗУЛЬТАТ: Никто ни в кого не попал! Ничья! ")
