@@ -1,0 +1,69 @@
+import numpy as np
+
+
+y1_start = int(input("Tank 1, x start: "))
+x1_start = int(input("Tank 1, y start: "))
+y1_end = int(input("Tank 1, x end: "))
+x1_end = int(input("Tank 1, y end: "))
+
+y2_start = int(input("Tank 2, x start: "))
+x2_start = int(input("Tank 2, y start: "))
+y2_end = int(input("Tank 2, x end: "))
+x2_end = int(input("Tank 2, y end: "))
+
+tank1_mask = np.zeros((10, 10), dtype=bool)
+tank1_mask[x1_start:x1_end, y1_start:y1_end] = True 
+
+tank2_mask = np.zeros((10, 10), dtype=bool)
+tank2_mask[x2_start:x2_end, y2_start:y2_end] = True
+
+board = np.zeros((10, 10), dtype=int)
+
+
+overlap_exists = np.any(tank1_mask & tank2_mask)
+print(f"Overlap: {overlap_exists}")
+board[x1_start:x1_end, y1_start:y1_end] += 1
+
+board[x2_start:x2_end, y2_start:y2_end] += 2
+
+print(board)
+
+def get_fire_mask(x_start, x_end, y_start, y_end):
+    fire_mask = np.zeros((10, 10), dtype=bool)
+    
+    
+    barrel_x = max(x_start, x_end - 2)
+    barrel_y = max(y_start, y_end - 2)
+   
+    for i in range(1, 5):
+        if barrel_x - i >= 0:
+            fire_mask[barrel_x - i, barrel_y] = True  # Вверх
+        if barrel_x + i < 10:
+            fire_mask[barrel_x + i, barrel_y] = True  # Вниз
+        if barrel_y - i >= 0:
+            fire_mask[barrel_x, barrel_y - i] = True  # Влево
+        if barrel_y + i < 10:
+            fire_mask[barrel_x, barrel_y + i] = True  # Вправо
+    
+    return fire_mask
+
+
+fire1_mask = get_fire_mask(x1_start, x1_end, y1_start, y1_end)
+fire2_mask = get_fire_mask(x2_start, x2_end, y2_start, y2_end)
+
+
+tank1_under_fire = np.any(fire2_mask & tank1_mask)
+tank2_under_fire = np.any(fire1_mask & tank2_mask)
+
+print("\n--- Статус обстрела ---")
+
+
+if tank1_under_fire and tank2_under_fire:
+    print("оба под огнем")
+elif tank1_under_fire or tank2_under_fire:
+    if tank1_under_fire:
+        print("один под огнем (Первый танк под прицелом Второго)")
+    else:
+        print("один под огнем (Второй танк под прицелом Первого)")
+else:
+    print("оба не под огнем")
