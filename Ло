@@ -1,0 +1,94 @@
+def analyze_relationships(people, pairs):
+    """
+    Анализирует отношения на множестве людей.
+    
+    people: множество или список людей
+    pairs: множество пар (x, y) - кортежи (str, str)
+    """
+    # Преобразуем пары в множество для быстрого поиска
+    P = set(pairs)
+    
+    results = []
+    
+    # 1. Проверка на нарциссов (x, x)
+    narcissists = [x for x in people if (x, x) in P]
+    if len(narcissists) == 1:
+        results.append("Есть нарцисс")
+    elif len(narcissists) > 1:
+        results.append("Есть нарциссы")
+    
+    # 2. Проверка на безответную любовь (x, y) есть, но (y, x) нет
+    unrequited_exists = False
+    for x, y in P:
+        if x != y and (y, x) not in P:  # не рассматриваем петли (x,x)
+            unrequited_exists = True
+            break
+    if unrequited_exists:
+        results.append("Безответная любовь")
+    
+    # 3. Проверка на счастливые пары (x, y) и (y, x) где x != y
+    happy_pairs = set()
+    for x, y in P:
+        if x != y and (y, x) in P:
+            # Добавляем упорядоченную пару, чтобы не считать дважды
+            happy_pairs.add(tuple(sorted([x, y])))
+    
+    happy_count = len(happy_pairs)
+    if happy_count == 1:
+        results.append("Есть счастливая пара")
+    elif happy_count == 2:
+        results.append("Есть две счастливые пары")
+    elif happy_count >= 3:  # 3 пары = 6 человек, если все разные
+        results.append("Идиллия, все счастливы")
+    
+    # 4. Проверка на любовный квадрат (x,y), (y,z), (z,k), (k,x)
+    # Преобразуем в словарь: кто кого любит (у каждого только один объект любви)
+    love_dict = {}
+    for x, y in P:
+        love_dict[x] = y  # если у x несколько пар, возьмём последнюю, но по условию функциональное отношение
+    
+    square_exists = False
+    for x in people:
+        # Ищем цепочку длины 4, возвращающуюся к x
+        if x not in love_dict:
+            continue
+        y = love_dict[x]
+        if y not in love_dict or y == x:
+            continue
+        z = love_dict[y]
+        if z not in love_dict or z == y:
+            continue
+        k = love_dict[z]
+        if k not in love_dict:
+            continue
+        w = love_dict[k]
+        if w == x:
+            # Нашли квадрат: x -> y -> z -> k -> x
+            # Проверяем, что все 4 человека разные
+            if len({x, y, z, k}) == 4:
+                square_exists = True
+                break
+    
+    if square_exists:
+        results.append("Есть любовный квадрат")
+    
+    # Выводим результаты
+    if results:
+        for result in results:
+            print(result)
+    else:
+        print("Нет особых ситуаций")
+
+
+# Пример использования
+if name == "main":
+    A = {"Аня", "Яна", "Лена", "Андрей", "Толя", "Роман"}
+    P = {
+        ("Аня", "Толя"),
+        ("Толя", "Аня"),
+        ("Лена", "Лена"),
+        ("Андрей", "Андрей"),
+        ("Яна", "Роман")
+    }
+    
+    analyze_relationships(A, P)
