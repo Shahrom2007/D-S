@@ -1,0 +1,51 @@
+def analyze_relation(name, R, A):
+    print(f"--- Результаты для {name} ---")
+    print(f"R = {R}")
+    
+    # 1. Рефлексивность: для всех a in A, (a,a) in R
+    is_reflexive = all((a, a) in R for a in A)
+    
+    # 2. Антирефлексивность: для всех a in A, (a,a) not in R
+    is_irreflexive = all((a, a) not in R for a in A)
+    
+    # 3. Симметричность: если (a,b) in R, то (b,a) in R
+    is_symmetric = all((b, a) in R for a, b in R)
+    
+    # 4. Антисимметричность: если (a,b) in R и (b,a) in R, то a == b
+    is_antisymmetric = all(a == b for a, b in R if (b, a) in R)
+    
+    # 5. Транзитивность: если (a,b) in R и (b,c) in R, то (a,c) in R
+    is_transitive = all((a, c) in R for a, b1 in R for b2, c in R if b1 == b2)
+    
+    # Отношение эквивалентности (рефлексивно, симметрично, транзитивно)
+    is_equivalence = is_reflexive and is_symmetric and is_transitive
+    
+    # Отношение (частичного нестрогого) порядка (рефлексивно, антисимметрично, транзитивно)
+    is_order = is_reflexive and is_antisymmetric and is_transitive
+    
+    # Формируем и выводим текст по образцу
+    print("Рефлексивно" if is_reflexive else "Не рефлексивно")
+    print("Транзитивно" if is_transitive else "Не транзитивно")
+    print("Симметрично" if is_symmetric else "Не симметрично")
+    print("Антирефлексивно" if is_irreflexive else "Не антирефлексивно")
+    print("Антисимметрично" if is_antisymmetric else "Не антисимметрично")
+    print("Отношение эквивалентности" if is_equivalence else "Не отношение эквивалентности")
+    print("Отношение порядка" if is_order else "Не отношение порядка")
+    print("\n")
+
+# Базовое множество из разминки
+A = {1, 2, 3, 4}
+
+# Отношение из примера (для проверки правильности алгоритма)
+R_example = {(1,1), (2,2), (3,3), (4,4), (1,3), (3,1)}
+
+# Отношения из заданий 1, 2 и 3
+R1 = {(1,1), (2,1), (2,3), (2,4), (3,2), (3,3), (3,4), (4,3), (4,4)}
+R2 = {(1,2), (1,3), (1,4), (2,3), (2,4), (3,4)}
+R3 = {(1,1), (2,1), (2,2), (3,1), (3,2), (3,3), (4,1), (4,2), (4,3), (4,4)}
+
+# Запуск анализа
+analyze_relation("Примера", R_example, A)
+analyze_relation("R1", R1, A)
+analyze_relation("R2", R2, A)
+analyze_relation("R3", R3, A)
