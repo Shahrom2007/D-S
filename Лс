@@ -1,0 +1,83 @@
+A = ["Аня", "Яна", "Лена", "Андрей", "Толя", "Роман"]
+
+P = {
+    ("Роман", "Яна"),
+    ("Яна", "Андрей"),
+    ("Андрей", "Лена"),
+    ("Лена", "Роман"),
+    ("Толя", "Аня"),
+    ("Аня", "Толя"),
+}
+
+# 1. Нарциссы: (x, x)
+narcissists = {x for x, y in P if x == y}
+if narcissists:
+    if len(narcissists) == 1:
+        print("Есть нарцисс:", *narcissists)
+    else:
+        print("Есть нарциссы:", ", ".join(narcissists))
+
+# Строим граф "кто кого любит"
+graph = {}
+for u, v in P:
+    graph.setdefault(u, set()).add(v)
+
+# 2. Любовные треугольники: x -> y -> z -> x
+love_triangles = set()
+for x in graph:
+    for y in graph[x]:
+        for z in graph.get(y, []):
+            if x in graph.get(z, []) and len({x, y, z}) == 3:
+                love_triangles.add(tuple(sorted((x, y, z))))
+
+if love_triangles:
+    print("Есть любовный треугольник:")
+    for tri in love_triangles:
+        print("  Треугольник:", ", ".join(tri))
+
+# 3. Любовные квадраты: x -> y -> z -> k -> x
+love_quadrangles = set()
+edges_in_quadrangles = set()
+for x in graph:
+    for y in graph[x]:
+        for z in graph.get(y, []):
+            for k in graph.get(z, []):
+                if x in graph.get(k, []) and len({x, y, z, k}) == 4:
+                    nodes = tuple(sorted((x, y, z, k)))
+                    love_quadrangles.add(nodes)
+                    edges_in_quadrangles |= {(x, y), (y, z), (z, k), (k, x)}
+
+if love_quadrangles:
+    print("Есть любовный квадрат:")
+    for quad in love_quadrangles:
+        print("  Квадрат:", ", ".join(quad))
+
+# 4. Безответная любовь: (x,y) есть, (y,x) нет, x != y, и ребро не из квадрата
+unrequited = {
+    (x, y)
+    for x, y in P
+    if x != y and (y, x) not in P and (x, y) not in edges_in_quadrangles
+}
+
+if unrequited:
+    print("Безответная любовь:")
+    for x, y in unrequited:
+        print(f"  {x} любит {y}")
+
+# 5. Счастливые пары: и (x,y), и (y,x)
+mutual_pairs = {
+    tuple(sorted((x, y)))
+    for x, y in P
+    if x != y and (y, x) in P
+}
+
+if mutual_pairs:
+    n = len(mutual_pairs)
+    if n == 1:
+        print("Есть счастливая пара:")
+    elif n == 2:
+        print("Есть две счастливые пары:")
+    else:
+        print("Идиллия, все счастливы")
+    for x, y in mutual_pairs:
+        print(f"  Счастливая пара: {x} и {y}")
