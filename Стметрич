@@ -1,0 +1,74 @@
+import re
+
+def analyze_relation(R, A):
+    print(f"\nВаше отношение: R = {R}")
+    
+    # 1. Рефлексивность
+    is_reflexive = all((a, a) in R for a in A)
+    
+    # 2. Антирефлексивность
+    is_irreflexive = all((a, a) not in R for a in A)
+    
+    # 3. Симметричность
+    is_symmetric = all((b, a) in R for a, b in R)
+    
+    # 4. Антисимметричность
+    is_antisymmetric = all(a == b for a, b in R if (b, a) in R)
+    
+    # 5. Транзитивность
+    is_transitive = all((a, c) in R for a, b1 in R for b2, c in R if b1 == b2)
+    
+    # Отношение эквивалентности
+    is_equivalence = is_reflexive and is_symmetric and is_transitive
+    
+    # Отношение порядка
+    is_order = is_reflexive and is_antisymmetric and is_transitive
+    
+    # Вывод результатов строго как в примере
+    print("Рефлексивно" if is_reflexive else "Не рефлексивно")
+    print("Транзитивно" if is_transitive else "Не транзитивно")
+    print("Симметрично" if is_symmetric else "Не симметрично")
+    print("Антирефлексивно" if is_irreflexive else "Не антирефлексивно")
+    print("Антисимметрично" if is_antisymmetric else "Не антисимметрично")
+    print("Отношение эквивалентности" if is_equivalence else "Не отношение эквивалентности")
+    print("Отношение порядка" if is_order else "Не отношение порядка")
+    print("-" * 40 + "\n")
+
+def main():
+    # Базовое множество из лабораторной работы
+    A = {1, 2, 3, 4}
+    
+    print("=== Анализатор отношений ===")
+    print(f"Базовое множество A = {A}")
+    print("Вводите пары цифр в любом удобном виде.")
+    print("Например: 1,1 2,2 3,3 ИЛИ (1,1), (2,2)")
+    print("Для выхода из программы напишите 'выход'.\n")
+
+    while True:
+        user_input = input("Введите ваши пары цифр: ")
+        
+        if user_input.lower() in ['exit', 'выход', 'quit']:
+            print("Завершение работы.")
+            break
+            
+        # Умный поиск всех чисел в строке (игнорирует скобки, запятые, пробелы)
+        numbers = [int(x) for x in re.findall(r'\d+', user_input)]
+        
+        if not numbers:
+            print("Цифры не найдены. Попробуйте еще раз.\n")
+            continue
+            
+        if len(numbers) % 2 != 0:
+            print("Ошибка: вы ввели нечетное количество цифр. Каждой цифре нужна пара!\n")
+            continue
+            
+        # Формируем множество пар (кортежей) из введенных чисел
+        R = set()
+        for i in range(0, len(numbers), 2):
+            R.add((numbers[i], numbers[i+1]))
+            
+        # Запускаем анализ для введенных данных
+        analyze_relation(R, A)
+
+if __name__ == "__main__":
+    main()
