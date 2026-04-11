@@ -1,0 +1,214 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+
+// ========================
+// Структуры
+// ========================
+
+typedef struct {
+    double x;
+    double y;
+    char *name;
+} Point;
+
+typedef struct {
+    int num_points;
+    Point *points;
+    char *name;
+} Polygon;
+
+// ========================
+// Вспомогательные функции
+// ========================
+
+double point_distance(const Point *a, const Point *b) {
+    double dx = b->x - a->x;
+    double dy = b->y - a->y;
+    return sqrt(dx * dx + dy * dy);
+}
+
+// ========================
+// Вычисления для многоугольника
+// ========================
+
+double polygon_perimeter(const Polygon *poly) {
+    if (poly->num_points < 2) return 0.0;
+    
+    double total = 0.0;
+    for (int i = 0; i < poly->num_points; i++) {
+        int next = (i + 1) % poly->num_points;
+        total += point_distance(&poly->points[i], &poly->points[next]);
+    }
+    return total;
+}
+
+double polygon_area(const Polygon *poly) {
+    if (poly->num_points < 3) return 0.0;
+    
+    double sum = 0.0;
+    for (int i = 0; i < poly->num_points; i++) {
+        int next = (i + 1) % poly->num_points;
+        sum += (poly->points[next].x - poly->points[i].x) *
+               (poly->points[next].y + poly->points[i].y);
+    }
+    return fabs(sum * 0.5);
+}
+
+double polygon_diameter(const Polygon *poly) {
+    double max_dist = 0.0;
+    
+    for (int i = 0; i < poly->num_points; i++) {
+        for (int j = i + 1; j < poly->num_points; j++) {
+            double dist = point_distance(&poly->points[i], &poly->points[j]);
+            if (dist > max_dist) {
+                max_dist = dist;
+            }
+        }
+    }
+    return max_dist;
+}
+
+// ========================
+// Освобождение памяти
+// ========================
+
+void free_polygon(Polygon *poly) {
+    if (poly == NULL) return;
+    
+    for (int i = 0; i < poly->num_points; i++) {
+        free(poly->points[i].name);
+    }
+    free(poly->points);
+    free(poly->name);
+    
+    poly->points = NULL;
+    poly->name = NULL;
+    poly->num_points = 0;
+}
+
+// ========================
+// Чтение из файла
+// ========================
+
+int read_polygon_from_file(const char *filename, Polygon *poly) {
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        fprintf(stderr, "Error: Cannot open file '%s'\n", filename);
+        return 0;
+    }
+    
+    // читаем количество вершин
+    if (fscanf(file, "%d", &poly->num_points) != 1) {
+        fprintf(stderr, "Error: Failed to read number of points\n");
+        fclose(file);
+        return 0;
+    }
+    
+    if (poly->num_points < 3) {
+        fprintf(stderr, "Error: Polygon must have at least 3 points (got %d)\n", poly->num_points);
+        fclose(file);
+        return 0;
+    }
+    
+    // выделяем память под точки
+    poly->points = (Point*)malloc(poly->num_points * sizeof(Point));
+    if (poly->points == NULL) {
+        fprintf(stderr, "Error: Memory allocation failed for points\n");
+        fclose(file);
+        return 0;
+    }
+    
+    // читаем имя многоугольника
+    char buffer[256];
+    if (fscanf(file, "%255s", buffer) != 1) {
+        fprintf(stderr, "Error: Failed to read polygon name\n");
+        free(poly->points);
+        fclose(file);
+        return 0;
+    }
+    
+    poly->name = strdup(buffer);
+    if (poly->name == NULL) {
+        fprintf(stderr, "Error: Memory allocation failed for polygon name\n");
+        free(poly->points);
+        fclose(file);
+        return 0;
+    }
+    
+    // читаем точки
+    for (int i = 0; i < poly->num_points; i++) {
+        if (fscanf(file, "%lf %lf %255s", 
+                   &poly->points[i].x, 
+                   &poly->points[i].y, 
+                   buffer) != 3) {
+            fprintf(stderr, "Error: Failed to read point %d\n", i);
+            free_polygon(poly);
+            fclose(file);
+            return 0;
+        }
+        
+        poly->points[i].name = strdup(buffer);
+        if (poly->points[i].name == NULL) {
+            fprintf(stderr, "Error: Memory allocation failed for point %d name\n", i);
+            free_polygon(poly);
+            fclose(file);
+            return 0;
+        }
+    }
+    
+    fclose(file);
+    return 1;
+}
+
+// ========================
+// Вывод информации
+// ========================
+
+void print_polygon_info(const Polygon *poly) {
+    printf("\n=== Polygon Information ===\n");
+    printf("Name: %s\n", poly->name);
+    printf("Number of vertices: %d\n", poly->num_points);
+    
+    printf("\nVertices:\n");
+    for (int i = 0; i < poly->num_points; i++) {
+        printf("  %s: (%.2lf, %.2lf)\n", 
+               poly->points[i].name, 
+               poly->points[i].x, 
+               poly->points[i].y);
+    }
+    
+    printf("\n=== Calculated Values ===\n");
+    if (poly->num_points >= 2) {
+        printf("Distance P0-P1: %.4lf\n", point_distance(&poly->points[0], &poly->points[1]));
+    }
+    if (poly->num_points >= 3) {
+        printf("Distance P1-P2: %.4lf\n", point_distance(&poly->points[1], &poly->points[2]));
+    }
+    printf("Perimeter: %.4lf\n", polygon_perimeter(poly));
+    printf("Area: %.4lf\n", polygon_area(poly));
+    printf("Diameter: %.4lf\n", polygon_diameter(poly));
+}
+
+// ========================
+// Главная функция
+// ========================
+
+int main(int argc, char *argv[]) {
+    if (argc < 2) {
+        fprintf(stderr, "Usage: %s input_file.txt\n", argv[0]);
+        return 1;
+    }
+    
+    Polygon polygon;
+    
+    if (!read_polygon_from_file(argv[1], &polygon)) {
+        return 1;
+    }
+    
+    print_polygon_info(&polygon);
+    
+    free_polygon(&polygon);
+    return 0;
+}
