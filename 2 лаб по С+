@@ -1,0 +1,160 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// ========================
+// Структуры данных
+// ========================
+
+typedef struct {
+    char *title;
+    char *author;
+    char *publisher;
+    int year;
+} Book;
+
+typedef struct TreeNode {
+    Book *data;
+    int count;                  // количество одинаковых книг
+    struct TreeNode *left;
+    struct TreeNode *right;
+} TreeNode;
+
+// ========================
+// Функции сравнения
+// ========================
+
+int compare_by_author(const Book *a, const Book *b) {
+    if (a->author == NULL) return -1;
+    if (b->author == NULL) return 1;
+    return strcmp(a->author, b->author);
+}
+
+int compare_by_title(const Book *a, const Book *b) {
+    if (a->title == NULL) return -1;
+    if (b->title == NULL) return 1;
+    return strcmp(a->title, b->title);
+}
+
+int compare_books(const Book *a, const Book *b) {
+    int author_cmp = compare_by_author(a, b);
+    if (author_cmp != 0) {
+        return author_cmp;
+    }
+    return compare_by_title(a, b);
+}
+
+// ========================
+// Создание и удаление
+// ========================
+
+Book *create_book(const char *author, const char *title) {
+    Book *book = (Book*)malloc(sizeof(Book));
+    if (book == NULL) {
+        fprintf(stderr, "Memory allocation failed for book\n");
+        return NULL;
+    }
+    
+    book->author = (author == NULL) ? NULL : strdup(author);
+    book->title  = (title  == NULL) ? NULL : strdup(title);
+    book->publisher = NULL;
+    book->year = 0;
+    
+    return book;
+}
+
+void free_book(Book *book) {
+    if (book == NULL) return;
+    free(book->author);
+    free(book->title);
+    free(book->publisher);
+    free(book);
+}
+
+// ========================
+// Операции с деревом
+// ========================
+
+TreeNode *tree_find(TreeNode *root, const Book *target) {
+    if (root == NULL) {
+        return NULL;
+    }
+    
+    int cmp = compare_books(target, root->data);
+    
+    if (cmp == 0) {
+        return root;
+    } else if (cmp < 0) {
+        return tree_find(root->left, target);
+    } else {
+        return tree_find(root->right, target);
+    }
+}
+
+TreeNode *tree_insert(TreeNode *root, Book *book) {
+    if (root == NULL) {
+        root = (TreeNode*)malloc(sizeof(TreeNode));
+        if (root == NULL) {
+            fprintf(stderr, "Cannot allocate tree node\n");
+            exit(EXIT_FAILURE);
+        }
+        root->data = book;
+        root->count = 1;
+        root->left = root->right = NULL;
+        return root;
+    }
+    
+    int cmp = compare_books(book, root->data);
+    
+    if (cmp == 0) {
+        // книга уже существует — увеличиваем счётчик
+        root->count++;
+        free_book(book);  // дубликат не нужен
+    } else if (cmp < 0) {
+        root->left = tree_insert(root->left, book);
+    } else {
+        root->right = tree_insert(root->right, book);
+    }
+    
+    return root;
+}
+
+void tree_free(TreeNode *root) {
+    if (root == NULL) return;
+    tree_free(root->left);
+    tree_free(root->right);
+    free_book(root->data);
+    free(root);
+}
+
+void tree_print_inorder(TreeNode *root) {
+    if (root == NULL) return;
+    
+    tree_print_inorder(root->left);
+    
+    printf("Author: %s | Title: %s | Count: %d\n",
+           root->data->author ? root->data->author : "(unknown)",
+           root->data->title  ? root->data->title  : "(unknown)",
+           root->count);
+    
+    tree_print_inorder(root->right);
+}
+
+// ========================
+// Основная функция
+// ========================
+
+int main(void) {
+    TreeNode *root = NULL;
+    
+    root = tree_insert(root, create_book("Einstein, A.", "Relativity"));
+    root = tree_insert(root, create_book("Hawking, S.", "A Brief History of Time"));
+    root = tree_insert(root, create_book("Einstein, A.", "The Meaning of Relativity"));
+    root = tree_insert(root, create_book("Feynman, R.", "The Feynman Lectures"));
+    
+    printf("--- Sorted by author, then title ---\n");
+    tree_print_inorder(root);
+    
+    tree_free(root);
+    return 0;
+}
