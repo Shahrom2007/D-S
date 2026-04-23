@@ -1,0 +1,260 @@
+# poetry.py
+# Преобразует слово в двоичный вектор ударных (True) и безударных (False) слогов
+
+import random
+
+def process_word(word):
+    syllables = []
+    vowels_lower = 'aeiouy'
+    vowels_upper = 'AEIOUY'
+    for i, letter in enumerate(word):
+        if letter in vowels_lower or letter in vowels_upper:
+            # Определяем ударение (упрощённо: первая гласная в слове — ударная)
+            # В реальности нужно учитывать ударение из словаря, но для демо сделаем так
+            is_stressed = (i == 0) or (i > 0 and word[i-1] not in vowels_lower + vowels_upper)
+            syllables.append(is_stressed)
+        else:
+            syllables.append(False)
+    # Упрощаем: убираем лишние False между слогами, оставляя только информацию о слогах
+    result = []
+    for i, s in enumerate(syllables):
+        if s:
+            result.append(True)
+        elif i == 0 or not syllables[i-1]:
+            result.append(False)
+        # иначе пропускаем
+    return result if result else [False]
+
+def process_line(line):
+    words = line.split()
+    result = []
+    for w in words:
+        result.extend(process_word(w))
+    return result
+
+# Преобразует строку по данному двоичному вектору ударных (True) и безударных (False) слогов
+def print_digits(syllables, pronounce):
+    i = 0
+    while i < len(syllables):
+        best_key = None
+        max_len = 0
+        for key, val in pronounce.items():
+            bool_val = [bool(x) for x in val]
+            if len(bool_val) <= len(syllables) - i:
+                match = True
+                for j in range(len(bool_val)):
+                    if bool_val[j] != syllables[i + j]:
+                        match = False
+                        break
+                if match and len(bool_val) > max_len:
+                    max_len = len(bool_val)
+                    best_key = key
+        if best_key is not None:
+            print(best_key, end=' ')
+            i += max_len
+        else:
+            # Если нет точного совпадения, берём односложное число
+            found = False
+            for key, val in pronounce.items():
+                if len(val) == 1 and bool(val[0]) == syllables[i]:
+                    print(key, end=' ')
+                    i += 1
+                    found = True
+                    break
+            if not found:
+                print('?', end=' ')
+                i += 1
+    print()
+
+# === УЛУЧШЕНИЕ 1: СЛУЧАЙНЫЙ ВЫБОР ЧИСЛА ===
+def print_digits_random(syllables, pronounce):
+    i = 0
+    while i < len(syllables):
+        candidates = []
+        for key, val in pronounce.items():
+            bool_val = [bool(x) for x in val]
+            if len(bool_val) <= len(syllables) - i:
+                match = True
+                for j in range(len(bool_val)):
+                    if bool_val[j] != syllables[i + j]:
+                        match = False
+                        break
+                if match:
+                    candidates.append((key, len(bool_val)))
+        if candidates:
+            # Случайный выбор из подходящих чисел
+            best_key, max_len = random.choice(candidates)
+        else:
+            best_key, max_len = '?', 1
+        print(best_key, end=' ')
+        i += max_len
+    print()
+
+# === УЛУЧШЕНИЕ 2: РИФМА ===
+def get_rhyme_suffix(prosody, length=2):
+    """Возвращает последние `length` слогов произношения как кортеж"""
+    if len(prosody) < length:
+        return tuple(prosody)
+    return tuple(prosody[-length:])
+
+def print_digits_rhyme(syllables, pronounce, prev_rhyme_suffix=None, rhyme_length=2):
+    i = 0
+    result_numbers = []
+    while i < len(syllables):
+        candidates = []
+        for key, val in pronounce.items():
+            bool_val = [bool(x) for x in val]
+            if len(bool_val) <= len(syllables) - i:
+                match = True
+                for j in range(len(bool_val)):
+                    if bool_val[j] != syllables[i + j]:
+                        match = False
+                        break
+                if match:
+                    candidates.append((key, bool_val))
+        if candidates:
+            if prev_rhyme_suffix is not None:
+                # Ищем кандидатов, рифмующихся с предыдущим числом
+                rhyme_candidates = []
+                for key, val in candidates:
+                    current_suffix = get_rhyme_suffix(val, rhyme_length)
+                    if current_suffix == prev_rhyme_suffix:
+                        rhyme_candidates.append((key, val))
+                if rhyme_candidates:
+                    candidates = rhyme_candidates
+            # Случайный выбор
+            best_key, best_val = random.choice(candidates)
+        else:
+            best_key, best_val = '?', [syllables[i]]
+        print(best_key, end=' ')
+        result_numbers.append(best_key)
+        i += len(best_val)
+    print()
+    return result_numbers
+
+# === УЛУЧШЕНИЕ 3: РАСШИРЕНИЕ ЧИСЕЛ ДО 99 ===
+def generate_pronounce_up_to_99():
+    """Генерирует произношения для чисел от 1 до 99"""
+    p = {}
+    # Базовые числа 1-20 (примерные схемы ударений)
+    base = {
+        1: [0, 1], 2: [1], 3: [1], 4: [0, 1, 0], 5: [0], 6: [1], 7: [1],
+        8: [1, 0], 9: [1, 0], 10: [1, 0], 11: [0, 1, 0, 0], 12: [0, 1, 0],
+        13: [0, 1, 0], 14: [0, 1, 0, 0], 15: [0, 1, 0], 16: [0, 1, 0],
+        17: [0, 1, 0], 18: [0, 1, 0], 19: [0, 1, 0, 0], 20: [1, 0]
+    }
+    p.update(base)
+    
+    # Десятки 30,40,...,90
+    tens = {
+        30: [0, 1], 40: [0, 1], 50: [0, 1],
+        60: [0, 1], 70: [0, 1], 80: [0, 1], 90: [0, 1]
+    }
+    
+    for tens_val, tens_pros in tens.items():
+        for unit in range(1, 10):
+            num = tens_val + unit
+            if num in p:
+                continue
+            # Соединяем произношение десятков и единиц
+            if unit in p:
+                pros = tens_pros + p[unit]
+            else:
+                pros = tens_pros + [1 if unit % 2 == 0 else 0]
+            p[num] = pros[:8]  # ограничиваем длину для разумности
+    return p
+
+# Словарь "число - произношение" (расширенный до 99)
+p = generate_pronounce_up_to_99()
+
+# Также оставляем старый словарь для совместимости
+p_old = {
+    1: [0, 1], 2: [1], 3: [1], 4: [0, 1, 0], 5: [0], 6: [1], 7: [1],
+    8: [1, 0], 9: [1, 0], 10: [1, 0], 11: [0, 1, 0, 0], 12: [0, 1, 0],
+    13: [0, 1, 0], 14: [0, 1, 0, 0], 15: [0, 1, 0], 16: [0, 1, 0],
+    17: [0, 1, 0], 18: [0, 1, 0], 19: [0, 1, 0, 0], 20: [1, 0]
+}
+
+filename = 'poem.txt'
+
+# Разбиваем входной файл на строки
+try:
+    with open(filename, 'r', encoding='utf-8') as file:
+        lines = [line.strip() for line in file if line.strip()]
+except FileNotFoundError:
+    print(f"Файл {filename} не найден. Создаю пример...")
+    with open(filename, 'w', encoding='utf-8') as f:
+        f.write("мама мыла раму\n")
+        f.write("папа ел суп\n")
+        f.write("кот спал весь день\n")
+    with open(filename, 'r', encoding='utf-8') as file:
+        lines = [line.strip() for line in file if line.strip()]
+
+print("=== ЦИФРОВЫЕ СТИХИ ===\n")
+
+# Преобразуем каждую строку в двоичный вектор ударных и безударных слогов
+print("Исходные строки:")
+for line in lines:
+    print(f"  {line}")
+print()
+
+print("--- Вариант 1: обычный подбор (без улучшений) ---")
+for line in lines:
+    syllables = process_line(line)
+    print(f"Строка: {line}")
+    print(f"Слоги: {syllables}")
+    print("Числа: ", end='')
+    print_digits(syllables, p_old)
+    print()
+
+print("--- Вариант 2: случайный выбор (улучшение 1) ---")
+for line in lines:
+    syllables = process_line(line)
+    print(f"Строка: {line}")
+    print("Числа: ", end='')
+    print_digits_random(syllables, p)
+    print()
+
+print("--- Вариант 3: с рифмой (улучшение 2) ---")
+prev_suffix = None
+for line in lines:
+    syllables = process_line(line)
+    print(f"Строка: {line}")
+    print("Числа: ", end='')
+    numbers = print_digits_rhyme(syllables, p, prev_suffix, rhyme_length=2)
+    if numbers:
+        last_num = numbers[-1]
+        if last_num in p:
+            prev_suffix = get_rhyme_suffix(p[last_num], 2)
+        else:
+            prev_suffix = None
+    print()
+
+print("--- Вариант 4: расширенный словарь до 99 (улучшение 3) ---")
+print(f"Доступно чисел: {len(p)} (от 1 до {max(p.keys())})")
+for line in lines:
+    syllables = process_line(line)
+    print(f"Строка: {line}")
+    print("Числа: ", end='')
+    print_digits_random(syllables, p)
+    print()
+
+print("\n=== Анализ кода: множества, отношения, функции, кванторы ===")
+print("Множества:")
+print("  - pronounce (p): множество чисел и их произношений")
+print("  - syllables: множество слогов (True/False)")
+print("  - candidates: множество подходящих чисел")
+print()
+print("Отношения:")
+print("  - R(число, схема_ударений) — отношение 'имеет произношение'")
+print("  - match — отношение совпадения схемы с ритмом строки")
+print()
+print("Функции:")
+print("  - process_word(word) → вектор слогов")
+print("  - print_digits(syllables, p) → вывод чисел")
+print("  - get_rhyme_suffix(prosody) → кортеж последних слогов")
+print()
+print("Кванторы:")
+print("  - ∀ число ∈ pronounce ∃ последовательность слогов")
+print("  - ∃ число ∈ candidates такое, что ∀j val[j] = syllables[i+j]")
+print("  - ∀ строка ∈ poem.txt ∃ набор чисел")
