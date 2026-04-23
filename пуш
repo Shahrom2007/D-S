@@ -1,0 +1,83 @@
+# преобразует слово в двоичный вектор
+#   ударных (True) и безударных (False) слогов
+def process_word(word):
+    syllables = []
+    for i, letter in enumerate(word):
+        if letter in {'а', 'о', 'е', 'у', 'и', 'ы', 'ю', 'я', 'э', 'ё'
+                      'А', 'О', 'Е', 'У', 'И', 'Ы', 'Ю', 'Я', 'Э', 'Ё'}:
+            if letter == 'ё' or letter == 'Ё' \
+                    or i + 1 < len(word) and word[i + 1] == '\'':
+                syllables.append(True)
+            else:
+                syllables.append(False)
+    return syllables
+
+
+# преобразует строку в двоичный вектор
+#   ударных (True) и безударных (False) слогов
+def process_line(line):
+    syllables = []
+    words = line.split(" ")
+    #print(words)
+    for word in words:
+        word_syllables = process_word(word)
+        syllables += word_syllables
+    return syllables
+
+
+# выводит цифровую строку по данному двоичному вектору
+#   ударных (True) и безударных (False) слогов
+def print_digits(syllables, pronounce):
+    # место для вашего кода
+    # функция должна вывести числа с таким же произношением
+    cur = 0
+    while cur < len(syllables):
+        max_len = 0
+        best_key = None
+        for key, val in pronounce.items():
+            bool_val = list(map(bool, val))
+            #print(syllables[cur:cur+len(val)])
+            #print(bool_val)
+            if syllables[cur:cur+len(val)] == bool_val:
+                if len(val) > max_len:
+                    max_len = len(val)
+                    best_key = key
+        print(best_key, end=' ')
+        cur += max_len
+    print()
+
+
+p = dict()  # словарь "число - произношение"
+p[1] = [0, 1]
+p[2] = [1]
+p[3] = [1]
+p[4] = [0, 1, 0]
+p[5] = [0]  # для разнообразия сделаем такой слог безударным
+p[6] = [1]
+p[7] = [1]
+p[8] = [1, 0]
+p[9] = [1, 0]
+p[10] = [1, 0]
+p[11] = [0, 1, 0, 0]
+p[12] = [0, 1, 0]
+p[13] = [0, 1, 0]
+p[14] = [0, 1, 0, 0]
+p[15] = [0, 1, 0]
+p[16] = [0, 1, 0]
+p[17] = [0, 1, 0]
+p[18] = [0, 0, 1, 0]
+p[19] = [0, 0, 1, 0]
+p[20] = [1, 0]
+
+filename = 'poem.txt'
+
+# разбиваем входной файл на строки
+with open(filename) as file:
+    lines = [line.rstrip() for line in file]
+
+# преобразуем каждую строку в двоичный вектор
+#   ударных (True) и безударных (False) слогов
+for line in lines:
+    syllables = process_line(line)
+    #print(syllables)
+    print_digits(syllables, p)
