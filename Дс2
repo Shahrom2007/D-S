@@ -1,0 +1,85 @@
+import itertools
+
+# Вспомогательная функция для красивого вывода множеств (строк)
+def print_set(name, s):
+    print(f"{name}: {sorted(s)}\n")
+
+print("="*50)
+print("ШАГ 1: Формирование множества K1")
+word1 = "математика"
+# Номера букв: 1..10. Класс эквивалентности с нулевыми остатками: x % 3 == 0
+k1_indices = [i for i in range(1, len(word1) + 1) if i % 3 == 0]
+k1 = set(word1[i-1] for i in k1_indices)
+print_set("K1", k1)
+
+print("="*50)
+print("ШАГ 2: Формирование множества K2 (сочетания с повторениями длины 4)")
+# itertools.combinations_with_replacement требует отсортированного входного iterable
+k2 = {''.join(comb) for comb in itertools.combinations_with_replacement(sorted(k1), 4)}
+print_set("K2", k2)
+
+print("="*50)
+print("ШАГ 3: Формирование K3 и K4")
+word2 = "фракталы"
+# Ищем подслово, начинающееся и заканчивающееся одной буквой
+subword = None
+for i in range(len(word2)):
+    for j in range(i+1, len(word2)):
+        if word2[i] == word2[j]:
+            subword = word2[i:j+1]
+            break
+    if subword: break
+
+print(f"Найдено подслово: '{subword}'")
+
+third_char = subword[2]          # третья буква подслова
+last_char = subword[-1]          # последняя буква подслова
+# Буквы исходного слова, не вошедшие в подслово (уникальные)
+not_in_sub = sorted(set(ch for ch in word2 if ch not in subword))
+
+k3 = set()
+# Замена последней буквы на третью
+k3.add(subword[:-1] + third_char)
+# Замена последней буквы на буквы, не вошедшие в подслово
+for ch in not_in_sub:
+    k3.add(subword[:-1] + ch)
+
+k3_sorted = sorted(k3)
+# Первое слово множества K3 (по условию это слово, полученное заменой на третью букву)
+first_word_k3 = subword[:-1] + third_char
+
+# Перестановки с повторениями букв первого слова K3
+k4 = {''.join(p) for p in set(itertools.permutations(first_word_k3))}
+
+print_set("K3", k3)
+print_set("K4", k4)
+
+print("="*50)
+print("ШАГ 4: Формирование K5")
+B = set(word1)
+C = set("и")
+D = set(word2)
+E = set("макет")
+F = set("мира")
+
+# (((B ∪ C) \ F) ∪ E) ∩ D
+k5 = (((B | C) - F) | E) & D
+print_set("K5", k5)
+
+print("="*50)
+print("ШАГ 5: Формирование K6 (размещения с повторениями длины 4)")
+k6 = {''.join(p) for p in itertools.product(k5, repeat=4)}
+print(f"K6: Всего элементов: {len(k6)} (для экономии места не выводится полностью)")
+
+print("="*50)
+print("ШАГ 6: Формирование K7 = K6 ∩ K4 ∩ K2")
+k7 = k6 & k4 & k2
+print_set("K7", k7)
+
+print("="*50)
+print("ШАГ 7: Расшифровка кодового слова")
+# K7 содержит единственную строку "актт". 
+# Из её букв {а, к, т, т} составляем осмысленное русское слово.
+code_word = "такт"
+print(f"Буквы из K7: {sorted(''.join(k7))}")
+print(f"✅ ИСКОМОЕ КОДОВОЕ СЛОВО: {code_word}")
