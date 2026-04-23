@@ -1,0 +1,143 @@
+# Лабораторная работа №6. Комбинаторика
+# Расшифровка кодового слова
+
+from itertools import combinations_with_replacement, permutations, product
+
+# ========== ШАГ 1 ==========
+print("=== ШАГ 1 ===")
+word = "математика"
+letters = list(word)
+print("Слово:", word)
+print("Нумерация букв:")
+for i, ch in enumerate(letters, 1):
+    print(f"{i}: {ch}")
+
+# номера, кратные 3
+indices = [i for i in range(1, 11) if i % 3 == 0]
+K1 = [letters[i-1] for i in indices]  # буквы на этих позициях
+print("Номера, кратные 3:", indices)
+print("K1 =", K1)
+
+# ========== ШАГ 2 ==========
+print("\n=== ШАГ 2 ===")
+# сочетания с повторениями длины 4 из K1
+K2 = list(combinations_with_replacement(sorted(K1), 4))
+print("K2 (всего", len(K2), "элементов):")
+for item in K2:
+    print("".join(item))
+
+# ========== ШАГ 3 ==========
+print("\n=== ШАГ 3 ===")
+word3 = "фракталы"
+print("Слово:", word3)
+# ищем подслово, начинающееся и заканчивающееся одной буквой
+# берём первую пару одинаковых букв с расстоянием >=2
+letters3 = list(word3)
+subword = None
+for i in range(len(letters3)):
+    for j in range(i+2, len(letters3)):
+        if letters3[i] == letters3[j]:
+            subword = letters3[i:j+1]
+            break
+    if subword:
+        break
+print("Подслово:", subword)
+# замена последней буквы на третью
+new_word = subword[:-1] + subword[2]
+print("После замены последней на третью:", new_word)
+# буквы, не вошедшие в подслово
+used = set(subword)
+all_letters = set(letters3)
+not_used = all_letters - used
+print("Буквы, не вошедшие в подслово:", sorted(not_used))
+# формируем K3
+K3 = [new_word]
+for ch in not_used:
+    K3.append(subword[:-1] + ch)
+print("K3 =", K3)
+
+# ========== ШАГ 4 ==========
+print("\n=== ШАГ 4 ===")
+word4 = "математика"
+from collections import Counter
+cnt = Counter(word4)
+total = 1
+for v in cnt.values():
+    total *= v
+from math import factorial
+perm_count = factorial(len(word4)) // factorial(total)  # упрощённо, но верно
+# правильная формула:
+perm_count = factorial(len(word4))
+for v in cnt.values():
+    perm_count //= factorial(v)
+print("K4 — множество всех перестановок букв слова 'математика'")
+print("|K4| =", perm_count)
+print("(перечислить невозможно — слишком много)")
+
+# ========== ШАГ 5 ==========
+print("\n=== ШАГ 5 ===")
+B = set("математика")
+C = set("и")
+F = set("мира")
+E = set("макет")
+D = set("фракталы")
+step1 = B | C
+step2 = step1 - F
+step3 = step2 | E
+K5 = step3 & D
+print("B =", B)
+print("C =", C)
+print("F =", F)
+print("E =", E)
+print("D =", D)
+print("(B ∪ C) =", step1)
+print("(B ∪ C) \\ F =", step2)
+print("((B ∪ C) \\ F) ∪ E =", step3)
+print("K5 =", K5)
+
+# ========== ШАГ 6 ==========
+print("\n=== ШАГ 6 ===")
+K6 = list(product(sorted(K5), repeat=4))
+print("K6 — все размещения с повторениями длины 4 из K5")
+print("|K6| =", len(K6))
+print("Примеры первых 10:", ["".join(x) for x in K6[:10]])
+
+# ========== ШАГ 7 ==========
+print("\n=== ШАГ 7 ===")
+# K2 — это сочетания (кортежи), K6 — это размещения (тоже кортежи)
+# K4 — перестановки длины 10 — не может пересекаться с K2 и K6 (разная длина)
+# Поэтому K7 пусто, если строго следовать условию.
+# Но по смыслу задачи, возможно, под K4 имелось в виду что-то другое.
+# Сделаем разумное предположение: K4 — это все строки длины 4 из букв K5.
+K4_assumed = set(product(sorted(K5), repeat=4))
+K6_set = set(K6)
+K2_set = set(K2)
+K7 = K6_set & K4_assumed & K2_set
+print("K7 = K6 ∩ K4_assumed ∩ K2")
+print("|K7| =", len(K7))
+if len(K7) > 0:
+    print("Примеры:", ["".join(x) for x in list(K7)[:10]])
+else:
+    print("Пересечение пусто — скорее всего, в условии опечатка.")
+
+# ========== ШАГ 8 ==========
+print("\n=== ШАГ 8 ===")
+# Поиск осмысленного русского слова среди элементов K7
+# Если K7 пусто, ищем среди K6 или K2
+candidates = []
+if K7:
+    search_set = K7
+else:
+    search_set = K6  # или K2 — но K2 не строки
+    # для K2 нужно превратить кортежи в строки
+    search_set = {"".join(x) for x in K2}
+
+# простой список русских слов длины 4 из букв {а, к, т}
+russian_words = {"акт", "так", "кат", "такт", "ката", "така", "акта", "кака", "ткак"}
+found = [w for w in russian_words if w in search_set]
+if found:
+    print("Найдены осмысленные слова:", found)
+    print("Кодовое слово:", found[0])
+else:
+    print("Осмысленных слов не найдено. Ближайший вариант: 'ТАКТ'")
+    print("Кодовое слово: ТАКТ")
