@@ -1,0 +1,30 @@
+def find_components(adj_matrix):
+    n = len(adj_matrix)
+    visited = [False] * n
+    components = []
+    
+    def dfs(v):
+        visited[v] = True
+        component.append(v)
+        for u in range(n):
+            if adj_matrix[v][u] and not visited[u]:
+                dfs(u)
+    
+    for v in range(n):
+        if not visited[v]:
+            component = []
+            dfs(v)
+            components.append(component)
+    
+    return components
+graph = [
+    [0, 1, 1, 0, 0, 0],
+    [1, 0, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 1, 0],
+    [0, 0, 0, 1, 0, 1],
+    [0, 0, 0, 0, 1, 0]
+]
+
+result = find_components(graph)
+print("Связные компоненты:", result)
