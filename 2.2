@@ -1,0 +1,29 @@
+import networkx as nx
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Матрица смежности из примера 5.1
+P0 = np.matrix([
+    [0, 1, 1, 1, 0, 1],
+    [1, 0, 1, 1, 0, 1],
+    [1, 1, 0, 1, 0, 1],
+    [0, 1, 0, 0, 0, 0],
+    [1, 1, 1, 1, 0, 1],
+    [1, 1, 1, 1, 1, 0]
+])
+
+G = nx.DiGraph(P0)
+
+# Явно задаем координаты вершин, как на картинке
+pos = {
+    0: (-0.8, -0.6),
+    1: (0.8, 0.4),
+    2: (0.0, 1.0),
+    3: (1.0, -0.9),
+    4: (-1.0, 0.4),
+    5: (-0.1, -0.2)
+}
+
+nx.draw(G, pos, with_labels=True, node_size=300, arrows=True)
+plt.show()
+```[cite: 1, 2]
