@@ -1,0 +1,14 @@
+import networkx as nx
+import matplotlib.pyplot as plt
+
+# Задание 2.1
+G1 = nx.petersen_graph()
+plt.figure()
+nx.draw(G1, with_labels=True, node_color='tab:blue')
+plt.show()
+
+# Задание 2.2
+G2 = nx.tutte_graph()
+plt.figure()
+nx.draw(G2, with_labels=True, node_color='tab:blue')
+plt.show()
