@@ -1,0 +1,41 @@
+import networkx as nx
+import matplotlib.pyplot as plt
+
+# ==========================================
+# Задание 2.1: Граф Петерсена (Petersen Graph)
+# ==========================================
+G1 = nx.petersen_graph()
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+# 1. Оригинальный вид (радиальный / концентрический)
+pos1_1 = nx.shell_layout(G1, [range(5, 10), range(5)])
+nx.draw(G1, pos1_1, ax=ax1, with_labels=True, node_color='#1f78b4', node_size=500, font_color='white', font_weight='bold')
+ax1.set_title("Задание 2.1 — Вид 1")
+
+# 2. Повёрнутый / пружинный вид
+pos1_2 = nx.spring_layout(G1, seed=42)
+nx.draw(G1, pos1_2, ax=ax2, with_labels=True, node_color='#1f78b4', node_size=500, font_color='white', font_weight='bold')
+ax2.set_title("Задание 2.1 — Вид 2")
+
+plt.show()
+
+
+# ==========================================
+# Задание 2.2: Граф Тутта (Tutte Graph)
+# ==========================================
+G2 = nx.tutte_graph()
+
+fig, (ax3, ax4) = plt.subplots(1, 2, figsize=(12, 5))
+
+# 1. Расположение вершин для первого вида
+pos2_1 = nx.planar_layout(G2)
+nx.draw(G2, pos2_1, ax=ax3, with_labels=True, node_color='#1f78b4', node_size=400, font_color='white', font_weight='bold')
+ax3.set_title("Задание 2.2 — Вид 1")
+
+# 2. Спектральное / пружинное расположение
+pos2_2 = nx.spring_layout(G2, seed=10)
+nx.draw(G2, pos2_2, ax=ax4, with_labels=True, node_color='#1f78b4', node_size=400, font_color='white', font_weight='bold')
+ax4.set_title("Задание 2.2 — Вид 2")
+
+plt.show()
