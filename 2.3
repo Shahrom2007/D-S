@@ -1,0 +1,98 @@
+import numpy as np
+import networkx as nx
+
+# --- Пункт 1 и 2: Ввести граф с помощью матрицы смежности ---
+# Вершины по порядку: 0: A, 1: B, 2: C, 3: D
+nodes = ['A', 'B', 'C', 'D']
+
+# Ребра графа с картинки: (A,B), (A,D), (B,C), (B,D), (C,D)
+# Матрица смежности 4x4
+adj_matrix = np.array([
+    [0, 1, 0, 1],  # A
+    [1, 0, 1, 1],  # B
+    [0, 1, 0, 1],  # C
+    [1, 1, 1, 0]   # D
+])
+
+print("2. Матрица смежности:")
+print(adj_matrix)
+print()
+
+# --- Пункт 3: Вывести матрицу инцидентности ---
+# Список ребер с обозначениями (e1, e2, e3, e4, e5)
+edges = [
+    ('A', 'B'), # e1
+    ('A', 'D'), # e2
+    ('B', 'C'), # e3
+    ('B', 'D'), # e4
+    ('C', 'D')  # e5
+]
+
+# Создаем пустую матрицу инцидентности: 4 вершины x 5 ребер
+inc_matrix = np.zeros((4, 5), dtype=int)
+
+for edge_idx, (u, v) in enumerate(edges):
+    u_idx = nodes.index(u)
+    v_idx = nodes.index(v)
+    inc_matrix[u_idx, edge_idx] = 1
+    inc_matrix[v_idx, edge_idx] = 1
+
+print("3. Матрица инцидентности (строки: A, B, C, D; столбцы: e1..e5):")
+print(inc_matrix)
+print()
+
+# --- Пункт 4: Матрица Кирхгофа (Laplacian) ---
+# L = Degree_matrix - Adj_matrix
+degrees = np.sum(adj_matrix, axis=1)
+kirchhoff_matrix = np.diag(degrees) - adj_matrix
+
+print("4. Матрица Кирхгофа:")
+print(kirchhoff_matrix)
+print()
+
+# --- Пункт 5: Эксцентриситет и радиус графа ---
+# Создаем объект графа NetworkX для расчетов
+G = nx.Graph()
+for i, u in enumerate(nodes):
+    for j, v in enumerate(nodes):
+        if adj_matrix[i, j] == 1:
+            G.add_edge(u, v)
+
+eccentricities = nx.eccentricity(G)
+radius = nx.radius(G)
+
+print("5. Эксцентриситет вершин:")
+for node, ecc in eccentricities.items():
+    print(f"   Вершина {node}: {ecc}")
+print(f"   Радиус графа: {radius}")
+print()
+
+# --- Подпункт 4 (второй): Кратчайший путь между A и E ---
+# Т.к. вершины E нет на исходном рисунке, зададим матрицу весов с добавленной вершиной E
+# Граф весов для A, B, C, D, E (inf означает отсутствие прямого ребра)
+nodes_weighted = ['A', 'B', 'C', 'D', 'E']
+inf = float('inf')
+
+# Пример таблицы расстояний/смежности с весами
+weight_matrix = np.array([
+    [0,   2,   inf, 4,   inf], # A
+    [2,   0,   3,   1,   5],   # B
+    [inf, 3,   0,   2,   inf], # C
+    [4,   1,   2,   0,   1],   # D
+    [inf, 5,   inf, 1,   0]    # E
+])
+
+G_weighted = nx.Graph()
+for i in range(len(nodes_weighted)):
+    for j in range(i + 1, len(nodes_weighted)):
+        w = weight_matrix[i, j]
+        if w != inf and w > 0:
+            G_weighted.add_edge(nodes_weighted[i], nodes_weighted[j], weight=w)
+
+# Длина кратчайшего пути Дейкстры
+shortest_path_len = nx.dijkstra_path_length(G_weighted, 'A', 'E')
+shortest_path = nx.dijkstra_path(G_weighted, 'A', 'E')
+
+print("4 (доп). Длина кратчайшего пути между A и E:")
+print(f"   Путь: {' -> '.join(shortest_path)}")
+print(f"   Длина пути: {shortest_path_len}")
