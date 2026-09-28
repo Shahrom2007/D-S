@@ -1,0 +1,12 @@
+from bs4 import BeautifulSoup
+
+with open('map.xml', 'r', encoding='utf8') as f:
+    soup = BeautifulSoup(f.read(), 'xml')
+
+for node in soup.find_all('node'):
+    for tag in node.find_all('tag'):
+        if tag.get('k') == 'name' and tag.get('v') in ['ВГУЭС', 'Некрасовская, 50']:
+            name = tag.get('v')
+            lat = node.get('lat')
+            lon = node.get('lon')
+            print(f"Остановка '{name}': lat = {lat}, lon = {lon}")
